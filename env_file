@@ -1,0 +1,11 @@
+module.exports = {
+    authSecret: 'Sequência de caracteres',
+    mongooseConnection: 'Serviço utilizado (https://cloud.mongodb.com)',
+    mysqlConnection: {
+    	database: '',
+    	user: '',
+    	password: ''
+    }
+}
+
+// Crie um arquivo .env na raiz do projeto e lá exporte o mesmo modelo de objeto acima com as devidas configurações, este arquivo só é de modelo.
