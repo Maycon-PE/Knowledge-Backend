@@ -16,13 +16,22 @@ module.exports = app => {
 			app.db('categories')
 				.update(category)
 				.where({ id: category.id })
-				.then(() => res.status(204).send())
-				.catch(err => res.status(500).send(err))
+				.then(() => {
+					res.status(204).send()
+				})
+				.catch(err => {
+					res.status(500).send(err)
+				})
 		} else {
 			app.db('categories')
 				.insert(category)
-				.then(() => res.status(204).send())
-				.catch(err => res.status(500).send(err))
+				.then(id => {
+					app.io.emit('refresh-tree')
+					res.status(204).send()
+				})
+				.catch(err => {
+					res.status(500).send(err)
+				})
 		}
 	}
 
@@ -49,6 +58,7 @@ module.exports = app => {
 				.del()
 
 			existsOrError(rowsDeleted, 'Categoria não foi encontrada')
+			app.io.emit('refresh-tree')
 			res.status(204).send()
 		} catch(msg) {
 			res.status(400).send(msg)
@@ -83,10 +93,31 @@ module.exports = app => {
 		return categoriesWithPath
 	}
 
-	const get = (req, res) => {
-		app.db('categories')
-			.then(categories => res.json(withPath(categories)))
-			.catch(err => res.status(500).send(err))
+	const limit = 3 //limite da paginação
+
+	const get = async (req, res) => {
+		if (req.query.all === '') {
+			app.db('categories')
+				.then(categories => {
+					res.json(withPath(categories))
+				}).catch(err => res.status(500).send(err))
+		} else {
+			const page = +req.query.page || 1
+
+			const result = await app.db('categories')
+				.count('id')
+				.first()		
+
+			const count = Object.values(result)[0]	
+
+			app.db('categories')
+				.limit(limit)
+				.offset(page * limit - limit)
+				.then(categories => {
+					res.json({ data: withPath(categories), count, limit })
+				})
+				.catch(err => res.status(500).send(err))
+		}
 	}
 
 	const getById = (req, res) => {
@@ -102,7 +133,10 @@ module.exports = app => {
 
 		tree = tree.map(parentNode => {
 			const isChild = node => node.parentId === parentNode.id
-			parentNode.children = toTree(categories, categories.filter(isChild))
+			parentNode.nodes = toTree(categories, categories.filter(isChild))
+
+			parentNode.key = `element_in_tree_key_${parentNode.id}`
+			parentNode.label = parentNode.name
 
 			return parentNode
 		})

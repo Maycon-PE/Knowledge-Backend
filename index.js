@@ -3,10 +3,15 @@ const consign = require('consign')
 const mysql = require('./config/db')
 const mongoose = require('mongoose')
 
+const server = require('http').createServer(app)
+
+const io = require('socket.io')(server)
+
 require('./config/mongo')
 
 app.db = mysql
 app.mongo = mongoose
+app.io = io
 
 consign()
 	.include('./config/passport.js')
@@ -17,4 +22,4 @@ consign()
 	.then('./config/routes.js')
 	.into(app)
 
-app.listen(3001, err => console.log(err? 'Error': 'Started'))
+server.listen(8080, err => console.log(err? 'Error': 'Started'))

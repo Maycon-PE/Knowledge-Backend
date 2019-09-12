@@ -12,7 +12,7 @@ module.exports = app => {
 		app.db('users')
 			.where({ id: payload.id })
 			.first()
-			.then(user => done(null, user ? { bla: 'asdasd', ...payload } : false))
+			.then(user => done(null, user ? { ...payload } : false))
 			.catch(err => done(err, false))
 	})
 

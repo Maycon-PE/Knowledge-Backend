@@ -51,22 +51,47 @@ module.exports = app => {
 		}
 	}
 
-	const limit = 10 //Limite de paginação
+	const limit = 3 //Limite de paginação
 
 	const index = async (req, res) => {
-		const page = req.query.page || 1
+		const page = +req.query.page || 1
 
 		const result = await app.db('articles')
 			.count('id')
 			.first()
 
-		const count = result['count(`id`)']
+		const count = Object.values(result)[0]
 		
 		app.db('articles')
-			.select('id', 'name', 'description')
 			.limit(limit)
 			.offset(page * limit - limit)
-			.then(articles => res.json({ data: articles, count, limit }))
+			.then(articles => {
+				app.db('users')
+					.select('id', 'name')
+					.then(users => {
+						app.db('categories')
+							.select('id', 'name')
+							.then(categories => {
+								const newArticles = articles.map(article => {
+									for (let u = 0; u < users.length; u++) {
+										if (users[u].id === article.userId) {
+											article.author = users[u].name
+											break
+										}
+									}
+
+									for (let c = 0; c < categories.length; c++) {
+										if (categories[c].id === article.categoryId) {
+											article.category = categories[c].name
+											break
+										}
+									}
+									return article
+								})
+								res.json({ data: newArticles, count, limit })
+							}).catch(err => res.status(500).send())
+					}).catch(err => res.status(500).send())
+			})
 			.catch(err => res.status(500).send())
 	}
 
@@ -89,7 +114,7 @@ module.exports = app => {
 
 	const getByCategory = async (req, res) => {
 		const categoryId = req.params.id
-		const page = req.query.page || 1
+		const page = +req.query.page[0] || 1
 		const [ categories ] = await app.db.raw(queries.categoryWithChildren, categoryId)
 		const ids = categories.map(c => c.id)
 

@@ -12,13 +12,14 @@ module.exports = app => {
 
 		if (!user) return res.status(400).send('Usuário não encontrado!')
 
-		if (!bcrypt.compareSync(req.body.password, user.password)) return res.status(401).send('Senha inválida!')
+		if (!bcrypt.compareSync(req.body.password, user.password)) return res.status(400).send('Senha inválida!')
 
 		const now = Math.floor(Date.now() / 1000)
 
 		const payload = {
 			id: user.id,
 			name: user.name,
+			password: user.password,
 			email: user.email,
 			admin: user.admin,
 			iat: now,
