@@ -2,8 +2,9 @@ module.exports = app => {
 	const StatSchema = new app.mongo.Schema({
 		users: Number,
 		categories: Number,
-		articles: Number,
-		createdAt: Date
+		articles: Number
+	}, {
+		timestamps: true
 	})
 
 	const Stat = app.mongo.model('Stat', StatSchema)

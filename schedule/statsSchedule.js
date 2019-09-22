@@ -10,20 +10,33 @@ module.exports = app => {
 
 		const lastStat = await Stat.findOne({}, {}, { sort: { 'createdAt': -1 } })
 
-		const newStat = new Stat({
+		const data = {
 			users: usersCount['count(`id`)'],
 			categories: categoriesCount['count(`id`)'],
-			articles: articlesCount['count(`id`)'],
-			createdAt: new Date()
-		})
+			articles: articlesCount['count(`id`)']
+		}
 
-		const changeUsers = !lastStat || newStat.users !== lastStat.users
-		const changeCategories = !lastStat || newStat.categories !== lastStat.categories
-		const changeArticles = !lastStat || newStat.articles !== lastStat.articles
+		if (!lastStat) {
+			const newStat = new Stat(data)
 
-		if (changeUsers || changeCategories || changeArticles) {
-			app.io.emit('new_stats')
 			newStat.save().then(() => console.log('Estatísticas atualizadas!'))
+		} else {
+
+			const changeUsers = !lastStat || data.users !== lastStat.users
+			const changeCategories = !lastStat || data.categories !== lastStat.categories
+			const changeArticles = !lastStat || data.articles !== lastStat.articles
+
+			if (changeUsers || changeCategories || changeArticles) {
+
+				const update = await Stat.updateOne({ _id: lastStat._id }, data)
+
+				if (update.nModified) {
+					app.io.emit('new_stats')
+					console.log('Estatísticas atualizadas!')
+				} else {
+					console.log('Atualização falhou!')
+				}
+			}
 		}
 	})
 }

@@ -9,6 +9,8 @@ const io = require('socket.io')(server)
 
 require('./config/mongo')
 
+mysql.migrate.latest()
+
 app.db = mysql
 app.mongo = mongoose
 app.io = io

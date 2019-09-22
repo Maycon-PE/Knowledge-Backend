@@ -1,6 +1,6 @@
 module.exports = {
     authSecret: 'Sequência de caracteres',
-    mongooseConnection: 'Serviço utilizado (https://cloud.mongodb.com)',
+    mongooseUrlConnection: 'Serviço utilizado (https://cloud.mongodb.com)',
     mysqlConnection: {
     	database: '',
     	user: '',
